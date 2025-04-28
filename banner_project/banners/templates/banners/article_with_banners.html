@@ -1,0 +1,130 @@
+<!-- banners/templates/banners/article_with_banners.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+{% load static %}
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }}</title>
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        background: #f5f5f5;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+        gap: 20px;
+    }
+    .content {
+        width: 70%;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        border-radius: 8px;
+    }
+    .sidebar {
+        padding: 30px;
+        background: #ccc;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        border-radius: 8px;
+    }
+    .banner {
+        margin-bottom: 50px;
+        position: relative;
+        width: 250px;
+        height: auto;
+        background: white;
+        border-radius: 0% 0% 0% 0% / 0% 0% 0% 0% ;
+        color: white;
+        box-shadow: 20px 20px rgba(0,0,0,.15);
+        transition: all .4s ease;
+    }
+    .banner:hover {
+        border-radius: 0% 0% 50% 50% / 0% 0% 5% 5% ;
+        box-shadow: 10px 10px rgba(0,0,0,.25);
+    }
+    .banner img {
+        width: 250px;
+        object-fit: contain;
+        max-height: 300px;
+        display: block;
+        margin: 0 auto;
+        background: #fff;
+    }
+    .ad_heading {
+        color: black;
+        padding-bottom: 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+
+    iframe {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        border: none;
+    }
+    iframe.iframe_data {
+        width: 100%;
+        border: none;
+        min-height: 100vh; /* фиксированная или адаптивная высота */
+    }
+</style>
+    <style>
+        @media only screen and (max-width: 600px) {
+            .content {
+                width: 95%;
+            }
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <div class="content">
+            <h2>Статья</h2>
+            <div class="" style="overflow: hidden;">
+                <iframe id="main-frame" src="{{ article.content_url }}" onload="resizeIframe(this)" class="iframe_data"></iframe>
+
+            </div>
+            <script>
+                function resizeIframe(iframe) {
+                    try {
+                        iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+                    } catch (e) {
+                        // чужой домен, запрещён CORS — игнорируем
+                    }
+                }
+            </script>
+        </div>
+
+        <div class="sidebar">
+            <h3>Рекламные баннеры</h3>
+            {% for b in banners %}
+                <div class="banner">
+                    <a class="ad_heading" href="{% url 'banner_redirect' %}?banner_id={{ b.banner.id }}&banner_title_id={{ b.title.id }}&banner_image_id={{ b.image.id }}">
+                        <img src="{{ b.image.image.url }}" alt="{{ b.title.text }}">
+                        <p>{{ b.title.text }}</p>
+
+                    </a>
+
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>
