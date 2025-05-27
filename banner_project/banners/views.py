@@ -144,14 +144,23 @@ def written_article_with_banners(request, slug):
         banner = final_banners.pop(0)
         banners_used.append(banner)
 
+        image = banner.get_best_or_random_image()
+        title = banner.get_best_or_random_title()
+
+        banner.increment_views()
+        if image:
+            image.increment_views()
+        if title:
+            title.increment_views()
+
         banner_html = f"""
             <div class="banner-slot-in-text">
-                <a class="banner-slot-in-text_a" href="/go/?banner_id={banner.id}" >
+                <a class="banner-slot-in-text_a" href="/go/?banner_id={banner.id}&banner_title_id={title.id if title else ''}&banner_image_id={image.id if image else ''}">
                     <div class="banner-slot-in-text_img_wrapper">
-                        <img src="{banner.get_best_or_random_image().image.url}" alt="{banner.title}">
+                        <img src="{image.image.url if image else ''}" alt="{banner.title}">
                     </div>
                     <div class="banner-text-block">
-                        <span class="banner-text-block_span">{banner.get_best_or_random_title().text}</span>
+                        <span class="banner-text-block_span">{title.text if title else banner.title}</span>
                         <span class="banner-slot_timer">{banner.random_minutes} минут назад</span>
                     </div>
                 </a>
@@ -161,7 +170,25 @@ def written_article_with_banners(request, slug):
         slot_counter += 1
 
     # Остаток баннеров — под статьёй
-    remaining_banners = final_banners
+    remaining_banners = []
+
+    for banner in final_banners:
+        image = banner.get_best_or_random_image()
+        title = banner.get_best_or_random_title()
+
+        banner.increment_views()
+        if image:
+            image.increment_views()
+        if title:
+            title.increment_views()
+
+        remaining_banners.append({
+            'banner': banner,
+            'image': image,
+            'title': title,
+            'ad_link': f"/go/?banner_id={banner.id}&banner_title_id={title.id if title else ''}&banner_image_id={image.id if image else ''}",
+            'minutes': banner.random_minutes
+        })
 
     request.session['banner_timers'] = timers
 

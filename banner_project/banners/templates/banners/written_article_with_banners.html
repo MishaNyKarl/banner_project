@@ -33,16 +33,14 @@
             {% if remaining_banners %}
 
                 {% for banner in remaining_banners %}
-                    <div class="banner-slot ">
-                        <a class="banner-slot_a" href="/go/?banner_id={{ banner.id }}">
+                    <div class="banner-slot">
+                        <a class="banner-slot_a" href="{{ banner.ad_link }}">
                             <div class="banner-slot_img_wrapper">
-                                <img src="{{ banner.get_best_or_random_image.image.url }}" alt="{{ banner.title }}">
+                                <img src="{{ banner.image.image.url }}" alt="{{ banner.banner.title }}">
                             </div>
-
-
                             <div class="banner-text-block">
-                                <span class="banner-text-block_span">{{ banner.get_best_or_random_title.text }}</span>
-                                <span class="banner-slot_timer">{{ banner.random_minutes }}  минут назад</span>
+                                <span class="banner-text-block_span">{{ banner.title.text }}</span>
+                                <span class="banner-slot_timer">{{ banner.minutes }} минут назад</span>
                             </div>
                         </a>
                     </div>
