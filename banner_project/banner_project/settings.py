@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'banners',
+    'ckeditor',
 ]
 
 MIDDLEWARE = [
@@ -80,12 +81,16 @@ WSGI_APPLICATION = 'banner_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'banner_db',  # Название базы данных
-        'CLIENT': {
-            'host': 'mongodb://localhost:27017',  #
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+    # 'default': {
+    #     'ENGINE': 'djongo',
+    #     'NAME': 'banner_db',  # Название базы данных
+    #     'CLIENT': {
+    #         'host': 'mongodb://localhost:27017',  #
+    #     },
+    # }
 }
 
 

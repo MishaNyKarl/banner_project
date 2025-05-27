@@ -1,7 +1,8 @@
 # banners/models.py
 from django.db import models
 import random
-
+from ckeditor.fields import RichTextField
+from django.utils.timezone import now
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -36,6 +37,20 @@ class Article(models.Model):
     def increment_clicks(self):
         self.clicks += 1
         self.save()
+
+
+class WrittenArticle(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    slug = models.SlugField(unique=True)
+    content = RichTextField()
+    tags = models.ManyToManyField(Tag, related_name='written_articles', blank=True)
+    random_tag_probability = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
 
 
 class Banner(models.Model):
@@ -80,6 +95,17 @@ class Banner(models.Model):
         if all(i.clicks < 10 for i in images):
             return random.choice(images)
         return max(images, key=lambda i: i.ctr())
+
+    @classmethod
+    def create_banner(cls, title="test", description="Описание баннера", link_url="https://example.com"):
+        banner = cls.objects.create(
+            title=title,
+            description=description,
+            link_url=link_url,
+            created_at=now(),
+            updated_at=now(),
+        )
+        return banner
 
 
 class BannerTitle(models.Model):
