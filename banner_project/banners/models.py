@@ -4,11 +4,21 @@ import random
 from ckeditor.fields import RichTextField
 from django.utils.timezone import now
 
+
+class Language(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
+
 
 
 class Vertical(models.Model):
@@ -31,6 +41,7 @@ class Article(models.Model):
     random_tag_probability = models.IntegerField(default=0)  # Частота отображения рандомных баннеров от 0 до 10
     clicks = models.IntegerField(default=0)
 
+
     def __str__(self):
         return self.title
 
@@ -48,6 +59,7 @@ class WrittenArticle(models.Model):
     random_tag_probability = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, null=True, related_name='articles')
 
     def __str__(self):
         return self.title
@@ -84,17 +96,26 @@ class Banner(models.Model):
         titles = self.titles.all()
         if not titles:
             return None
-        if all(t.clicks < 10 for t in titles):  # мало просмотров — рандом
+        if all(t.clicks < 15 for t in titles):  # мало просмотров — рандом
             return random.choice(titles)
         return max(titles, key=lambda t: t.ctr())  # лучший по ctr
+
+    def get_title_for_language(self, language):
+        titles = self.titles.filter(language=language)
+        if titles.exists():
+            if all(t.clicks < 15 for t in titles):
+                return random.choice(titles)
+            return max(titles, key=lambda t: t.ctr())
+        return self.get_best_or_random_title()
 
     def get_best_or_random_image(self):
         images = self.images.all()
         if not images:
             return None
-        if all(i.clicks < 10 for i in images):
+        if all(i.clicks < 15 for i in images):
             return random.choice(images)
         return max(images, key=lambda i: i.ctr())
+
 
     @classmethod
     def create_banner(cls, title="test", description="Описание баннера", link_url="https://example.com"):
@@ -111,6 +132,7 @@ class Banner(models.Model):
 class BannerTitle(models.Model):
     banner = models.ForeignKey(Banner, related_name='titles', on_delete=models.CASCADE)
     text = models.CharField(max_length=255)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, null=True, related_name='banner_titles')
     clicks = models.IntegerField(default=0)
     views = models.IntegerField(default=0)
 
@@ -149,6 +171,8 @@ class BannerImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.banner.title}"
+
+
 
 
 

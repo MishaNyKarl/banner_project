@@ -6,6 +6,20 @@ import random
 from django.utils.safestring import mark_safe
 
 
+def homepage(request):
+    items = []
+    for banner in Banner.objects.all():
+        for image in banner.images.all():
+            for title in banner.titles.all():
+                items.append({
+                    'image_url': image.image.url,
+                    'title': title.text,
+                    'ad_link': f"/go/?banner_id={banner.id}&banner_image_id={image.id}&banner_title_id={title.id}"
+                })
+    random.shuffle(items)
+    return render(request, 'banners/homepage.html', {'banner_items': items})
+
+
 def banner_redirect(request):
     banner_id = request.GET.get('banner_id')
     title_id = request.GET.get('banner_title_id')
@@ -104,10 +118,21 @@ def article_with_banners(request, slug):
     })
 
 
-
 def written_article_with_banners(request, slug):
     article = get_object_or_404(WrittenArticle, slug=slug)
     article_tags = set(article.tags.all())
+    time_phrases = {
+        'ru': 'минут назад',
+        'en': 'minutes ago',
+    }
+    lang_code = article.language.code if article.language else 'en'
+    label = time_phrases.get(lang_code, 'minutes ago')
+
+    related_phrases = {
+        'ru': 'Читайте также',
+        'en': 'Read more',
+    }
+    related_label = related_phrases.get(lang_code, 'Read more')
 
     # Собираем баннеры
     matched_banners = list(Banner.objects.filter(tags__in=article_tags).distinct())
@@ -140,18 +165,21 @@ def written_article_with_banners(request, slug):
             timers[key] = random.randint(10, 59)
         banner.random_minutes = timers[key]
 
+    random.shuffle(final_banners)
+
     while f"[BANNER_SLOT_{slot_counter}]" in content and final_banners:
         banner = final_banners.pop(0)
         banners_used.append(banner)
 
         image = banner.get_best_or_random_image()
-        title = banner.get_best_or_random_title()
+        title = banner.get_title_for_language(article.language)
 
         banner.increment_views()
         if image:
             image.increment_views()
         if title:
             title.increment_views()
+
 
         banner_html = f"""
             <div class="banner-slot-in-text">
@@ -161,7 +189,7 @@ def written_article_with_banners(request, slug):
                     </div>
                     <div class="banner-text-block">
                         <span class="banner-text-block_span">{title.text if title else banner.title}</span>
-                        <span class="banner-slot_timer">{banner.random_minutes} минут назад</span>
+                        <span class="banner-slot_timer">{banner.random_minutes} {time_phrases[lang_code]}</span>
                     </div>
                 </a>
             </div>
@@ -174,7 +202,7 @@ def written_article_with_banners(request, slug):
 
     for banner in final_banners:
         image = banner.get_best_or_random_image()
-        title = banner.get_best_or_random_title()
+        title = banner.get_title_for_language(article.language)
 
         banner.increment_views()
         if image:
@@ -187,13 +215,18 @@ def written_article_with_banners(request, slug):
             'image': image,
             'title': title,
             'ad_link': f"/go/?banner_id={banner.id}&banner_title_id={title.id if title else ''}&banner_image_id={image.id if image else ''}",
-            'minutes': banner.random_minutes
+            'minutes': banner.random_minutes,
+            'lang_code': lang_code,
+            'time_phrases': time_phrases
         })
+    random.shuffle(remaining_banners)
 
     request.session['banner_timers'] = timers
 
     return render(request, 'banners/written_article_with_banners.html', {
         'article': article,
         'content': mark_safe(content),
-        'remaining_banners': remaining_banners
+        'remaining_banners': remaining_banners,
+        'minutes_ago_label': label,
+        'related_label': related_label,
     })

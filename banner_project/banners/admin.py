@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django.contrib import admin
-from .models import Banner, Article, BannerImage, BannerTitle, Tag, Vertical, WrittenArticle
+from .models import Banner, Article, BannerImage, BannerTitle, Tag, Vertical, WrittenArticle, Language
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 
@@ -106,7 +106,7 @@ class ArticleAdmin(admin.ModelAdmin):
 class WrittenArticleForm(ModelForm):
     class Meta:
         model = WrittenArticle
-        fields = ['title', 'description', 'slug', 'content', 'tags', 'random_tag_probability']
+        fields = ['title', 'language', 'description', 'slug', 'content', 'tags', 'random_tag_probability']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -132,5 +132,6 @@ class WrittenArticleAdmin(admin.ModelAdmin):
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(Banner, BannerAdmin)
 admin.site.register(Tag)
+admin.site.register(Language)
 admin.site.register(Vertical, VerticalAdmin)
 

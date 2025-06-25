@@ -1,0 +1,71 @@
+body {
+    background-color: #0f0f0f;
+}
+
+/* Контейнер баннеров */
+#banner-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 16px;
+}
+
+
+
+/* Каждый баннер */
+.banner-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Обёртка для картинки: соотношение 16:9, позиционирование и скругления */
+.banner-item .thumb {
+  position: relative;
+  width: 100%;
+  padding-bottom: 68.75%; /* 9/16 = 0.5625 => 56.25% */
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* Картинка внутри обёртки */
+.banner-item .thumb img {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;      /* тянем по высоте контейнера */
+  width: auto;       /* ширина высчитывается по пропорциям */
+  transform: translateX(-50%); /* центрируем по горизонтали */
+  object-fit: cover;
+}
+
+/* Текст под картинкой */
+.banner-item .title {
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 0 10px;
+  line-height: 1.2;
+  color: #f1f1f1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;      /* Обрезаем текст на 2 строки */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+/* Пример hover-эффекта */
+.banner-item:hover .thumb {
+  transform: scale(1.03);
+  transition: transform 0.3s ease-in-out;
+}
+
+@media (max-width: 780px) {
+    #banner-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    .banner-item .title {
+        font-size: 15px;
+    }
+}

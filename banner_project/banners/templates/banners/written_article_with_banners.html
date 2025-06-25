@@ -32,6 +32,7 @@
         <div class="remaining-banners">
             {% if remaining_banners %}
 
+
                 {% for banner in remaining_banners %}
                     <div class="banner-slot">
                         <a class="banner-slot_a" href="{{ banner.ad_link }}">
@@ -40,7 +41,7 @@
                             </div>
                             <div class="banner-text-block">
                                 <span class="banner-text-block_span">{{ banner.title.text }}</span>
-                                <span class="banner-slot_timer">{{ banner.minutes }} минут назад</span>
+                                <span class="banner-slot_timer">{{ banner.minutes }} {{ minutes_ago_label }}</span>
                             </div>
                         </a>
                     </div>
@@ -50,7 +51,7 @@
         </div>
 
     </div>
-    <h1>Читайте также</h1>
+    <h1> {{ related_label }}</h1>
     <div class="page-bottom-infinity">
 
 
