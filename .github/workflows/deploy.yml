@@ -52,13 +52,13 @@ jobs:
             cd /srv/publicationinfo/banner_project/
             
             if [ ! -d venv ]; then
-              python -m venv venv
+              python3 -m venv venv
             fi
             
             source venv/bin/activate
             git reset --hard HEAD
             pip install -r requirements.txt
-            python manage.py migrate --noinput
-            python manage.py collectstatic --noinput
+            python3 manage.py migrate --noinput
+            pytho3n manage.py collectstatic --noinput
             sudo systemctl restart banner_project
             sudo systemctl reload nginx
