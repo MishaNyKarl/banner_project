@@ -38,6 +38,7 @@ jobs:
           target: "/srv/publicationinfo/banner_project/"
           exclude: |
             db.sqlite3
+            settings.py
             venv/
       - name: Run deployment commands
         uses: appleboy/ssh-action@v0.1.7
@@ -51,7 +52,6 @@ jobs:
             cd /srv/publicationinfo/banner_project/
             source venv/bin/activate
             git reset --hard HEAD
-            git clean -df
             pip install -r requirements.txt
             python manage.py migrate --noinput
             python manage.py collectstatic --noinput
