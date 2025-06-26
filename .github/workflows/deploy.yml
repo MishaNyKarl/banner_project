@@ -38,6 +38,7 @@ jobs:
           target: "/srv/publicationinfo/banner_project/"
           exclude: |
             db.sqlite3
+            venv/
       - name: Run deployment commands
         uses: appleboy/ssh-action@v0.1.7
         with:
