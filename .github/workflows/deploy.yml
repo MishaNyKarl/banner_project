@@ -58,7 +58,7 @@ jobs:
             source venv/bin/activate
             git reset --hard HEAD
             pip install -r requirements.txt
-            python3 manage.py migrate --noinput
-            pytho3n manage.py collectstatic --noinput
+            python3 banner_project/manage.py migrate --noinput
+            python3 banner_project/manage.py collectstatic --noinput
             sudo systemctl restart banner_project
             sudo systemctl reload nginx
