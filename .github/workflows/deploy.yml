@@ -8,6 +8,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./banner_project
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -19,7 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run Django tests
-        run: python banner_project/manage.py test
+        run: python manage.py test
 
   deploy:
     needs: test
