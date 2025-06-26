@@ -1,5 +1,5 @@
 venv/
 *.pyc
 __pycache__/
-db.sqlite3
-settings.py
+banner_project/db.sqlite3
+banner_project/banner_project/settings.py
