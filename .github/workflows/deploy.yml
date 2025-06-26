@@ -52,9 +52,8 @@ jobs:
             cd /srv/publicationinfo/banner_project/
             
             if [ ! -d venv ]; then
-              python3 -m venv venv
+              python -m venv venv
             fi
-            
             source venv/bin/activate
             git reset --hard HEAD
             pip install -r requirements.txt
