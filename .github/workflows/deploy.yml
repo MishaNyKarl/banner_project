@@ -36,6 +36,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           source: "."
           target: "/srv/publicationinfo/banner_project/"
+          exclude: |
+            db.sqlite3
       - name: Run deployment commands
         uses: appleboy/ssh-action@v0.1.7
         with:
