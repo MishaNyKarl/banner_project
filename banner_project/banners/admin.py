@@ -150,25 +150,25 @@ class BannerAdmin(OwnedAdmin):
 # ------------------------------------------------
 # 5) Админка для Article
 # ------------------------------------------------
-class ArticleForm(ModelForm):
-    class Meta:
-        model = Article
-        fields = ['title', 'description', 'slug', 'content_url',
-                  'tags', 'random_tag_probability']
-
-
-
-@admin.register(Article)
-class ArticleAdmin(OwnedAdmin):
-    form = ArticleForm
-    list_display = ('title', 'description', 'get_tags')
-    search_fields = ('title', 'description')
-    filter_horizontal = ('tags', )
-
-
-    def get_tags(self, obj):
-        return ", ".join(t.name for t in obj.tags.all())
-    get_tags.short_description = 'Tags'
+# class ArticleForm(ModelForm):
+#     class Meta:
+#         model = Article
+#         fields = ['title', 'description', 'slug', 'content_url',
+#                   'tags', 'random_tag_probability']
+#
+#
+#
+# @admin.register(Article)
+# class ArticleAdmin(OwnedAdmin):
+#     form = ArticleForm
+#     list_display = ('title', 'description', 'get_tags')
+#     search_fields = ('title', 'description')
+#     filter_horizontal = ('tags', )
+#
+#
+#     def get_tags(self, obj):
+#         return ", ".join(t.name for t in obj.tags.all())
+#     get_tags.short_description = 'Tags'
 
 
 # ------------------------------------------------
