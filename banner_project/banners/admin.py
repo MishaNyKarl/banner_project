@@ -1,10 +1,86 @@
-from django.forms import ModelForm
+from django import forms
 from django.contrib import admin
-from .models import Banner, Article, BannerImage, BannerTitle, Tag, Vertical, WrittenArticle, Language
-from django.utils.safestring import mark_safe
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
+from django.contrib.auth.models import Group
+from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
+from django.forms import ModelForm
+from .models import (
+    Banner, Article, BannerImage, BannerTitle,
+    Tag, WrittenArticle, Language
+)
 from django.utils.timezone import now
 
+User = get_user_model()
 
+
+# ------------------------------------------------
+# 1) Общий класс для «владельческих» моделей
+# ------------------------------------------------
+class OwnedAdmin(admin.ModelAdmin):
+    exclude = ('owner',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        # только те, что принадлежат пользователю
+        return qs.filter(owner=request.user)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.owner = request.user
+        obj.save()
+
+
+# ------------------------------------------------
+# 2) Переопределяем UserAdmin, скрывая пользователей от staff
+# ------------------------------------------------
+class UserAdmin(DefaultUserAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+# Группы тоже прячем от всех, кроме superuser
+admin.site.unregister(Group)
+
+
+# Регистрируем заново с нашим контролем прав
+@admin.register(Group)
+class GroupAdmin(DefaultGroupAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+# ------------------------------------------------
+# 3) Inline для Banner
+# ------------------------------------------------
 class BannerImageInline(admin.TabularInline):
     model = BannerImage
     extra = 1
@@ -15,19 +91,20 @@ class BannerTitleInline(admin.TabularInline):
     extra = 1
 
 
-class BannerAdmin(admin.ModelAdmin):
+# ------------------------------------------------
+# 4) Админка для Banner с владельческим поведением
+# ------------------------------------------------
+@admin.register(Banner)
+class BannerAdmin(OwnedAdmin):
     inlines = [BannerTitleInline, BannerImageInline]
-    list_display = ('title', 'description', 'get_tags', 'get_verticals')
-    filter_horizontal = ('tags', 'verticals')  # Добавляем возможность выбора нескольких тегов и вертикалей
+    list_display = ('title', 'description', 'get_tags', )
+    filter_horizontal = ('tags',)  # Добавляем возможность выбора нескольких тегов и вертикалей
     actions = ['create_sample_banner']
 
     def get_tags(self, obj):
         return ", ".join([tag.name for tag in obj.tags.all()])
     get_tags.short_description = 'Tags'
 
-    def get_verticals(self, obj):
-        return ", ".join([vertical.name for vertical in obj.verticals.all()])
-    get_verticals.short_description = 'Verticals'
 
     def create_sample_banner(self, request, queryset):
         title = "automatically_created_banner"
@@ -64,49 +141,37 @@ class BannerAdmin(admin.ModelAdmin):
     create_sample_banner.short_description = "Создать пример баннера"
 
 
-class VerticalAdmin(admin.ModelAdmin):
-    list_display = ('name', 'get_tags')
-    search_fields = ('name',)
-    filter_horizontal = ('tags',)  # Удобный выбор тегов для вертикали
-
-    def get_tags(self, obj):
-        return ", ".join([tag.name for tag in obj.tags.all()])
-
-    get_tags.short_description = 'Tags'
-
-
+# ------------------------------------------------
+# 5) Админка для Article
+# ------------------------------------------------
 class ArticleForm(ModelForm):
     class Meta:
         model = Article
-        fields = ['title', 'description', 'slug','content_url', 'tags', 'verticals', 'random_tag_probability']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.pk:  # Если это уже существующая статья
-            verticals = self.instance.verticals.all()
-            tags = Tag.objects.filter(verticals__in=verticals).distinct()
-            self.fields['tags'].initial = tags
+        fields = ['title', 'description', 'slug', 'content_url',
+                  'tags', 'random_tag_probability']
 
 
-class ArticleAdmin(admin.ModelAdmin):
+
+@admin.register(Article)
+class ArticleAdmin(OwnedAdmin):
     form = ArticleForm
-    list_display = ('title', 'description', 'get_verticals', 'get_tags')
+    list_display = ('title', 'description', 'get_tags')
     search_fields = ('title', 'description')
-    filter_horizontal = ('verticals', 'tags')  # Удобный выбор нескольких тегов и вертикалей
+    filter_horizontal = ('tags', )
 
-    def get_verticals(self, obj):
-        return ", ".join([vertical.name for vertical in obj.verticals.all()])
-    get_verticals.short_description = 'Verticals'
 
     def get_tags(self, obj):
-        return ", ".join([tag.name for tag in obj.tags.all()])
+        return ", ".join(t.name for t in obj.tags.all())
     get_tags.short_description = 'Tags'
 
 
+# ------------------------------------------------
+# 6) Админка для WrittenArticle
+# ------------------------------------------------
 class WrittenArticleForm(ModelForm):
     class Meta:
         model = WrittenArticle
-        fields = ['title', 'language', 'description', 'slug', 'content', 'tags', 'random_tag_probability']
+        fields = ['title', 'language', 'description', 'slug', 'content', 'tags']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -114,24 +179,21 @@ class WrittenArticleForm(ModelForm):
 
 
 @admin.register(WrittenArticle)
-class WrittenArticleAdmin(admin.ModelAdmin):
+class WrittenArticleAdmin(OwnedAdmin):
     form = WrittenArticleForm
-    list_display = ('title', 'slug', 'created_at')
+    list_display = ('title', 'slug', 'created_at', 'owner')
     prepopulated_fields = {"slug": ("title",)}
     filter_horizontal = ('tags',)
 
-    def get_tags(self, obj):
-        return ", ".join([tag.name for tag in obj.tags.all()])
-    get_tags.short_description = 'Tags'
+
+# ------------------------------------------------
+# 7) Простые модели без owner-фильтрации
+# ------------------------------------------------
+@admin.register(Tag)
+class TagAdmin(OwnedAdmin):
+    pass
 
 
-
-
-
-
-admin.site.register(Article, ArticleAdmin)
-admin.site.register(Banner, BannerAdmin)
-admin.site.register(Tag)
-admin.site.register(Language)
-admin.site.register(Vertical, VerticalAdmin)
-
+@admin.register(Language)
+class LanguageAdmin(admin.ModelAdmin):
+    pass

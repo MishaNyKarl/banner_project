@@ -1,5 +1,6 @@
 # banners/models.py
 from django.db import models
+from django.conf import settings
 import random
 from ckeditor.fields import RichTextField
 from django.utils.timezone import now
@@ -15,6 +16,11 @@ class Language(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name='tag',
+                              null=True,
+                              blank=True)
 
     def __str__(self):
         return self.name
@@ -60,6 +66,11 @@ class WrittenArticle(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     language = models.ForeignKey(Language, on_delete=models.CASCADE, null=True, related_name='articles')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name='written_article',
+                              null=True,
+                              blank=True)
 
     def __str__(self):
         return self.title
@@ -77,6 +88,11 @@ class Banner(models.Model):
     tags = models.ManyToManyField(Tag, related_name='banners', blank=True)
     verticals = models.ManyToManyField(Vertical, related_name='banners', blank=True)
 
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name='banner',
+                              null=True,
+                              blank=True)
     def __str__(self):
         return self.title
 
@@ -171,8 +187,3 @@ class BannerImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.banner.title}"
-
-
-
-
-

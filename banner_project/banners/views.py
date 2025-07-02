@@ -134,9 +134,11 @@ def written_article_with_banners(request, slug):
     }
     related_label = related_phrases.get(lang_code, 'Read more')
 
+    user_banners = Banner.objects.filter(owner=article.owner)
+
     # Собираем баннеры
-    matched_banners = list(Banner.objects.filter(tags__in=article_tags).distinct())
-    random_banners = list(Banner.objects.exclude(tags__in=article_tags))
+    matched_banners = list(user_banners.filter(tags__in=article_tags).distinct())
+    random_banners = list(user_banners.exclude(tags__in=article_tags))
 
     randomness_ratio = article.random_tag_probability / 10
 
@@ -150,6 +152,7 @@ def written_article_with_banners(request, slug):
             final_banners.append(matched_banners.pop(0))
         else:
             break
+
 
     # Разбираем контент
     content = article.content
