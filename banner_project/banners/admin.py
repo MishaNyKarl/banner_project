@@ -18,7 +18,12 @@ User = get_user_model()
 # 1) Общий класс для «владельческих» моделей
 # ------------------------------------------------
 class OwnedAdmin(admin.ModelAdmin):
-    exclude = ('owner',)
+    def get_exclude(self, request, obj=None):
+        # если суперпользователь — не исключаем ничего (покажем все поля, включая owner)
+        if request.user.is_superuser:
+            return ()
+        # иначе — убираем owner
+        return ('owner',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -27,8 +32,9 @@ class OwnedAdmin(admin.ModelAdmin):
         # только те, что принадлежат пользователю
         return qs.filter(owner=request.user)
 
+        # при сохранении: если юзер не супер — owner назначаем автоматически
     def save_model(self, request, obj, form, change):
-        if not change:
+        if not request.user.is_superuser and not change:
             obj.owner = request.user
         obj.save()
 
@@ -97,7 +103,7 @@ class BannerTitleInline(admin.TabularInline):
 @admin.register(Banner)
 class BannerAdmin(OwnedAdmin):
     inlines = [BannerTitleInline, BannerImageInline]
-    list_display = ('title', 'description', 'get_tags', )
+    list_display = ('title', 'description', 'get_tags', 'owner')
     filter_horizontal = ('tags',)  # Добавляем возможность выбора нескольких тегов и вертикалей
     actions = ['create_sample_banner']
 
@@ -171,7 +177,7 @@ class ArticleAdmin(OwnedAdmin):
 class WrittenArticleForm(ModelForm):
     class Meta:
         model = WrittenArticle
-        fields = ['title', 'language', 'description', 'slug', 'content', 'tags']
+        fields = ['title', 'language', 'description', 'slug', 'content', 'tags', 'owner']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
