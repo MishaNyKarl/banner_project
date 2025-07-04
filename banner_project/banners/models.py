@@ -26,7 +26,6 @@ class Tag(models.Model):
         return self.name
 
 
-
 class Vertical(models.Model):
     name = models.CharField(max_length=100, unique=True)
     tags = models.ManyToManyField(Tag, related_name='verticals')
