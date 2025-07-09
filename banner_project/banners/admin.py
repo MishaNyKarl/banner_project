@@ -102,15 +102,29 @@ class BannerTitleInline(admin.TabularInline):
 # ------------------------------------------------
 @admin.register(Banner)
 class BannerAdmin(OwnedAdmin):
+    exclude = ('verticals',)
     inlines = [BannerTitleInline, BannerImageInline]
     list_display = ('title', 'description', 'get_tags', 'owner')
     filter_horizontal = ('tags',)  # Добавляем возможность выбора нескольких тегов и вертикалей
     actions = ['create_sample_banner']
 
+    def get_fields(self, request, obj=None):
+        # базовый набор полей
+        fields = ['title', 'description', 'link_url', 'tags', 'clicks', 'views']
+        # только суперюзер увидит и сможет менять owner
+        if request.user.is_superuser:
+            fields.append('owner')
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        # если это не супер-юзер, делаем clicks и views только для чтения
+        if not request.user.is_superuser:
+            return ('clicks', 'views')
+        return ()
+
     def get_tags(self, obj):
         return ", ".join([tag.name for tag in obj.tags.all()])
     get_tags.short_description = 'Tags'
-
 
     def create_sample_banner(self, request, queryset):
         title = "automatically_created_banner"

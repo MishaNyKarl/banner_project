@@ -153,7 +153,6 @@ def written_article_with_banners(request, slug):
         else:
             break
 
-
     # Разбираем контент
     content = article.content
     slot_counter = 1
@@ -182,7 +181,6 @@ def written_article_with_banners(request, slug):
             image.increment_views()
         if title:
             title.increment_views()
-
 
         banner_html = f"""
             <div class="banner-slot-in-text">
