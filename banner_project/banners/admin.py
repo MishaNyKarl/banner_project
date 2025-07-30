@@ -126,6 +126,9 @@ class BannerAdmin(OwnedAdmin):
         return ", ".join([tag.name for tag in obj.tags.all()])
     get_tags.short_description = 'Tags'
 
+    def get_list_filter(self, request):
+        return ('owner',) if request.user.is_superuser else ()
+
     def create_sample_banner(self, request, queryset):
         title = "automatically_created_banner"
         description = "test"
@@ -205,13 +208,29 @@ class WrittenArticleAdmin(OwnedAdmin):
     prepopulated_fields = {"slug": ("title",)}
     filter_horizontal = ('tags',)
 
+    def get_list_filter(self, request):
+        return ('owner',) if request.user.is_superuser else ()
+
 
 # ------------------------------------------------
 # 7) Простые модели без owner-фильтрации
 # ------------------------------------------------
 @admin.register(Tag)
 class TagAdmin(OwnedAdmin):
-    pass
+    list_display = ('name', 'owner')
+    # по умолчанию без фильтров
+    list_filter = ()
+
+    def get_fields(self, request, obj=None):
+        # поля в форме: для суперюзера — name+owner, для остальных — только name
+        fields = ['name']
+        if request.user.is_superuser:
+            fields.append('owner')
+        return fields
+
+    def get_list_filter(self, request):
+        # суперюзер увидит фильтр по owner, обычные — ничего не увидят
+        return ('owner',) if request.user.is_superuser else ()
 
 
 @admin.register(Language)
