@@ -124,12 +124,12 @@ class Banner(models.Model):
         return self.get_best_or_random_title()
 
     def get_best_or_random_image(self):
-        images = self.images.all()
+        images = list(self.images.all())
         if not images:
             return None
-        if all(i.clicks < 15 for i in images):
-            return random.choice(images)
-        return max(images, key=lambda i: i.ctr())
+        if any(img.views > 0 for img in images):
+            return max(images, key=lambda i: i.ctr())
+        return random.choice(images)
 
 
     @classmethod
