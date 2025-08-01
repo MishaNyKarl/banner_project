@@ -19,20 +19,16 @@ User = get_user_model()
 # ------------------------------------------------
 class OwnedAdmin(admin.ModelAdmin):
     def get_exclude(self, request, obj=None):
-        # если суперпользователь — не исключаем ничего (покажем все поля, включая owner)
         if request.user.is_superuser:
             return ()
-        # иначе — убираем owner
         return ('owner',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        # только те, что принадлежат пользователю
         return qs.filter(owner=request.user)
 
-        # при сохранении: если юзер не супер — owner назначаем автоматически
     def save_model(self, request, obj, form, change):
         if not request.user.is_superuser and not change:
             obj.owner = request.user
@@ -105,19 +101,16 @@ class BannerAdmin(OwnedAdmin):
     exclude = ('verticals',)
     inlines = [BannerTitleInline, BannerImageInline]
     list_display = ('title', 'description', 'get_tags', 'owner')
-    filter_horizontal = ('tags',)  # Добавляем возможность выбора нескольких тегов и вертикалей
+    filter_horizontal = ('tags',)
     actions = ['create_sample_banner']
 
     def get_fields(self, request, obj=None):
-        # базовый набор полей
         fields = ['title', 'description', 'link_url', 'tags', 'clicks', 'views']
-        # только суперюзер увидит и сможет менять owner
         if request.user.is_superuser:
             fields.append('owner')
         return fields
 
     def get_readonly_fields(self, request, obj=None):
-        # если это не супер-юзер, делаем clicks и views только для чтения
         if not request.user.is_superuser:
             return ('clicks', 'views')
         return ()
@@ -222,14 +215,12 @@ class TagAdmin(OwnedAdmin):
     list_filter = ()
 
     def get_fields(self, request, obj=None):
-        # поля в форме: для суперюзера — name+owner, для остальных — только name
         fields = ['name']
         if request.user.is_superuser:
             fields.append('owner')
         return fields
 
     def get_list_filter(self, request):
-        # суперюзер увидит фильтр по owner, обычные — ничего не увидят
         return ('owner',) if request.user.is_superuser else ()
 
 
